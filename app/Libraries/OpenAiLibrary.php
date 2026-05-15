@@ -53,7 +53,7 @@ class OpenAiLibrary
         $date = now();
 
         $comando = "Extraia as informações desta transação ou saldo financeiro: $text\n\n"
-            . "Verifique o que faz sentido de acordo com o texto recebido. Entenda o contexto da mensagem. Ignore numeros relacionados a endereços, CEP, CPF e documentos de identificação.\n\n"
+            . "Verifique o que faz sentido de acordo com o texto recebido. Entenda o contexto da mensagem. Ignore numeros relacionados a endereços, CEP, CPF e documentos de identificação. Veja se o valor faz sentido com a conta. Não retorne numeros extratosféricos.\n\n"
             . "REGRAS IMPORTANTES SOBRE O TIPO:\n"
             . "- Use 'saldo' APENAS quando o usuário informar explicitamente quanto tem na conta em linguagem natural (ex: 'tenho 1000 reais', 'saldo de 500 reais na conta').\n"
             . "- Use 'despesa' quando o texto for um cupom fiscal, nota fiscal, recibo ou comprovante de compra (ex: contém palavras como VENDA, TOTAL, CPF DO CLIENTE, CNPJ, nomes de estabelecimentos, datas de compra e valores).\n"
