@@ -55,7 +55,7 @@ class OpenAiLibrary
         $comando = "Extraia as informações desta transação ou saldo financeiro: $text\n"
             . "Retorne APENAS um JSON válido com estas chaves obrigatórias:\n"
             . "type: 'receita', 'despesa' ou 'saldo' (use 'saldo' quando o usuário informar quanto tem na conta, ex: 'tenho 1000 reais', 'mil reais na conta')\n"
-            . "category: $category_list, procure outros ou vazio para desconhecido\n"
+            . "category: $category_list, procure outros ou 'Outros' para desconhecido\n"
             . "amount: número (apenas o valor numérico, sem símbolos. Converta valores por extenso, ex: 'mil' = 1000)\n"
             . "description: texto curto descritivo\n"
             . "reference_date: datetime se for identificável no texto, se não, retorne vazio. hoje é $date\n"
