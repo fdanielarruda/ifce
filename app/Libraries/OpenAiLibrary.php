@@ -53,7 +53,7 @@ class OpenAiLibrary
         $date = now();
 
         $comando = "Extraia as informações desta transação ou saldo financeiro: $text\n\n"
-            . "Verifique o que faz sentido de acordo com o texto recebido. Entenda o contexto da mensagem\n"
+            . "Verifique o que faz sentido de acordo com o texto recebido. Entenda o contexto da mensagem. Ignore numeros relacionados a endereços e documentos de identificação\n"
             . "Retorne APENAS um JSON válido com estas chaves obrigatórias:\n"
             . "type: 'receita', 'despesa' ou 'saldo' (use 'saldo' quando o usuário informar quanto tem na conta, ex: 'tenho 1000 reais', 'mil reais na conta')\n"
             . "category: $category_list, procure outros ou 'Outros' para desconhecido\n"
