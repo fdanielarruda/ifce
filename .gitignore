@@ -1,0 +1,9 @@
+# Dependências e artefatos
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+.idea/
+.env
+*:Zone.Identifier
+.pio/
