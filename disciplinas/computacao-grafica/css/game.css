@@ -1,0 +1,86 @@
+/* CONTROLS */
+#controls {
+    text-align: center;
+    position: relative; /* Adiciona posicionamento relativo para o canvas */
+}
+
+.joystick {
+    width: 90px;
+    height: 90px;
+    background-color: red;
+    border-radius: 50%;
+    box-shadow: 0px 5px 10px 0px silver;
+}
+
+/* Ajusta o canvas para aparecer ao lado do botão vermelho */
+#intensity-canvas {
+    position: absolute;
+    bottom: 0;
+    left: 100px;
+    width: 100px;
+    height: 200px;
+    border: 1px solid #000;
+}
+
+/* GAME */
+#soccer_pitch {
+    background-image: url("../images/stadium_bottom2.png");
+    background-size: cover; /* Faz com que a imagem cubra todo o contêiner */
+    background-position: center; /* Centraliza a imagem no contêiner */
+    background-repeat: no-repeat; /* Evita a repetição da imagem */
+    width: 60%;
+    margin-top: 80px;
+    text-align: center;
+    height: 600px;
+    position: relative; /* Garante que os elementos internos sejam posicionados relativamente a este contêiner */
+}
+
+#soccer_goal {
+    height: 300px;
+    width: 100%;
+    position: relative;
+}
+
+#soccer_goal img {
+    background-color: #91B61D;
+    position: absolute;
+    bottom: 0; /* Alinha a imagem com o fundo da div */
+    left: 50%; /* Centraliza horizontalmente */
+    transform: translateX(-50%); /* Ajusta a imagem para estar centralizada */
+}
+
+#soccer_green {
+    background-image: url("../images/stadium_bottom3.png");
+    height: 300px;
+    width: 100%;
+}
+
+#goal_small {
+    width: 400px;
+}
+
+#arrow_image {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    bottom: 10px; /* Define a distância da parte inferior do contêiner */
+    left: 10px; /* Ajuste a posição horizontal conforme necessário */
+}
+
+/* Gauge Chart */
+#intensity-chart {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 150px; /* Ajuste conforme necessário */
+    height: 150px; /* Ajuste conforme necessário */
+    display: none; /* Oculta o gráfico inicialmente */
+}
+
+#ball_image {
+    width: 50px;
+    position: absolute;
+    bottom: 10px;
+    left: 50%; /* Ponto de partida central */
+    transform: translateX(-50%);
+}

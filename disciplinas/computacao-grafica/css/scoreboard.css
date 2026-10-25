@@ -1,0 +1,64 @@
+/* SCOREBOARD */
+#scoreboard-goals {
+    background-color: black;
+    color: yellow;
+    font-family: 'Digital-7 Mono', 'digital-7', 'digital-7 mono', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0 10px; /* Adiciona um pouco de padding para evitar que o conteúdo fique muito perto das bordas */
+    position: absolute;
+    top: 10px; /* Ajusta a distância do topo conforme necessário */
+    left: 50%;
+    transform: translateX(-50%); /* Centraliza horizontalmente */
+    width: 300px; /* Ajusta a largura total menos o padding */
+    box-sizing: border-box;
+    z-index: 10; /* Garante que o placar fique acima de outros elementos */
+}
+
+.scoreboard {
+    display: flex;
+    flex-direction: row; /* Organiza os itens na horizontal */
+    align-items: center; /* Alinha verticalmente os itens no centro */
+    justify-content: space-between; /* Distribui o espaço entre os itens */
+    width: 100%;
+    max-width: 100%; /* Ajusta a largura do placar */
+    background-color: black;
+    color: yellow;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.country {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.country img {
+    width: 100%; /* Ajusta a largura das bandeiras para 100% do contêiner */
+    max-width: 150px; /* Define um tamanho máximo para as bandeiras */
+    height: auto;
+}
+
+.score {
+    font-size: 2em;
+    margin: 0 20px; /* Adiciona margem lateral para espaçamento entre o placar e as bandeiras */
+}
+
+.versus {
+    background-color: yellow;
+    height: 5px;
+    width: 50%;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 600px) {
+    .score {
+        font-size: 5em; /* Reduz o tamanho da fonte para telas menores */
+    }
+    .country img {
+        max-width: 100px; /* Reduz o tamanho das bandeiras em telas menores */
+    }
+}

@@ -1,0 +1,90 @@
+/* Estilo Global */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Orbitron", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+
+body {
+    background-color: black;
+}
+
+.float-left {
+    float: left;
+}
+
+/* Estilo geral para a página do jogo */
+#game-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Alinha todos os itens no centro horizontalmente */
+    justify-content: center; /* Alinha todos os itens no centro verticalmente */
+    height: 100vh; /* Faz com que o contêiner ocupe toda a altura da tela */
+    margin: 0;
+    padding: 0;
+}
+
+/* Estilo para o contêiner do gol */
+#goal-container {
+    width: 100%; /* Faz o contêiner do gol ocupar toda a largura da página */
+    display: flex;
+    justify-content: center; /* Centraliza o placar horizontalmente */
+    position: absolute; /* Permite posicionar o placar em relação ao contêiner do gol */
+    top: 10px; /* Ajusta a distância do topo conforme necessário */
+    left: 0;
+    right: 0;
+}
+
+/* Estilo para o campo de futebol */
+#soccer_pitch {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Alinha o campo de futebol no centro horizontalmente */
+    justify-content: center; /* Alinha o campo de futebol no centro verticalmente */
+    position: relative; /* Permite que o contêiner de futebol se posicione em relação ao seu contêiner pai */
+}
+
+/* Estilo para o controle */
+#controls {
+    margin-top: 20px; /* Adiciona um espaço acima dos controles */
+}
+
+/* Barra de Intensidade */
+#intensity-bar-container {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 300px; /* Ajuste conforme necessário */
+    height: 30px; /* Ajuste conforme necessário */
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 1px solid #ccc;
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5);
+}
+
+#intensity-bar {
+    height: 100%;
+    width: 0; /* Começa com largura 0 */
+    background-color: green; /* Inicialmente verde */
+}
+
+
+/* Responsividade */
+@media (max-width: 768px) {
+    #intensity-chart {
+        top: 10px;
+        left: 10px;
+        width: 100%;
+        max-width: 200px;
+        max-height: 200px;
+    }
+
+    #game-page {
+        width: 100%;
+        padding: 10px; /* Adiciona padding para evitar que o conteúdo fique muito perto das bordas */
+    }
+}
