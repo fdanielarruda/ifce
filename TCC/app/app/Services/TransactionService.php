@@ -1,0 +1,349 @@
+<?php
+
+namespace App\Services;
+
+use App\Libraries\OpenAiLibrary;
+use App\Models\Category;
+use App\Models\Transaction;
+use App\Models\User;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Facades\DB;
+
+class TransactionService
+{
+    public function __construct(
+        protected OpenAiLibrary $openAiLibrary
+    ) {}
+
+    public function list()
+    {
+        return Transaction::get();
+    }
+
+    public function listByTelegramId(string $telegramId, int $limit = 10)
+    {
+        $user = User::where('telegram_id', $telegramId)->first();
+
+        if (!$user) {
+            throw new Exception("Usuário não encontrado");
+        }
+
+        return Transaction::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get(['id', 'description', 'amount', 'type', 'reference_date']);
+    }
+
+    public function updateByTelegramId(int $id, string $telegramId, array $data)
+    {
+        $user = User::where('telegram_id', $telegramId)->first();
+
+        if (!$user) {
+            throw new Exception("Usuário não encontrado");
+        }
+
+        $transaction = Transaction::where('id', $id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $transaction->update($data);
+
+        return $transaction->fresh();
+    }
+
+    public function getSummary(string $telegramId, string $type)
+    {
+        $user = User::where('telegram_id', $telegramId)->first();
+
+        if (!$user) {
+            throw new Exception("Usuário não encontrado");
+        }
+
+        if ($type === 'month') {
+            return $this->getSummaryByMonth($user->id);
+        } elseif ($type === 'category') {
+            return $this->getSummaryByCategory($user->id);
+        }
+
+        throw new Exception("Tipo de resumo inválido. Use 'month' ou 'category'");
+    }
+
+    private function getSummaryByMonth(int $userId)
+    {
+        return Transaction::where('user_id', $userId)
+            ->select(
+                DB::raw("TO_CHAR(reference_date, 'YYYY-MM') as month"),
+                DB::raw("TO_CHAR(reference_date, 'MM/YYYY') as month_formatted"),
+                DB::raw('SUM(amount) as total'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('month', 'month_formatted')
+            ->orderBy('month', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'month' => $item->month_formatted,
+                    'total' => (float) $item->total,
+                    'count' => $item->count
+                ];
+            });
+    }
+
+    private function getSummaryByCategory(int $userId)
+    {
+        return Transaction::where('user_id', $userId)
+            ->join('categories', 'transactions.category_id', '=', 'categories.id')
+            ->select(
+                'categories.title as category',
+                DB::raw('SUM(transactions.amount) as total'),
+                DB::raw('COUNT(transactions.id) as count')
+            )
+            ->groupBy('categories.id', 'categories.title')
+            ->orderBy('total', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'category' => $item->category,
+                    'total' => (float) $item->total,
+                    'count' => $item->count
+                ];
+            });
+    }
+
+    public function getTransactionsGroupedByDate(?int $month = null, ?int $year = null)
+    {
+        $user = auth()->user();
+
+        $month = $month ?? now()->month;
+        $year = $year ?? now()->year;
+
+        $allTransactions = Transaction::where('user_id', $user->id)->get();
+        $totalIncome = $allTransactions->where('type', 'receita')->sum('amount');
+        $totalExpenses = $allTransactions->where('type', 'despesa')->sum('amount');
+        $totalBalance = $totalIncome - $totalExpenses;
+
+        $categories = Category::orderBy('title', 'asc')->get();
+
+        $transactions = Transaction::where('user_id', $user->id)
+            ->whereYear('reference_date', $year)
+            ->whereMonth('reference_date', $month)
+            ->orderBy('reference_date', 'desc')
+            ->get();
+
+        $monthlyIncome = $transactions->where('type', 'receita')->sum('amount');
+        $monthlyExpenses = $transactions->where('type', 'despesa')->sum('amount');
+
+        $grouped = [
+            'today' => [],
+            'yesterday' => [],
+            'older' => []
+        ];
+
+        $referenceDate = Carbon::create($year, $month, 1);
+        $today = now()->startOfDay();
+        $yesterday = now()->subDay()->startOfDay();
+
+        foreach ($transactions as $transaction) {
+            $transactionDate = $transaction->reference_date->startOfDay();
+
+            $formattedTransaction = [
+                'id' => $transaction->id,
+                'description' => $transaction->description,
+                'category' => $transaction->category->title,
+                'category_id' => $transaction->category->id,
+                'category_icon' => $transaction->category->icon,
+                'date' => $transaction->reference_date->format('Y-m-d'),
+                'time' => $transaction->reference_date->format('H:i'),
+                'amount' => $transaction->type === 'receita' ? abs($transaction->amount) : -abs($transaction->amount),
+                'type' => $transaction->type,
+                'icon' => $this->getCategoryIcon($transaction->category->title)
+            ];
+
+            if ($referenceDate->isSameMonth($today)) {
+                if ($transactionDate->equalTo($today)) {
+                    $grouped['today'][] = $formattedTransaction;
+                } elseif ($transactionDate->equalTo($yesterday)) {
+                    $grouped['yesterday'][] = $formattedTransaction;
+                } else {
+                    $dateKey = $transactionDate->format('Y-m-d');
+                    if (!isset($grouped['older'][$dateKey])) {
+                        $grouped['older'][$dateKey] = [
+                            'date' => $transactionDate->format('d/m/Y'),
+                            'transactions' => []
+                        ];
+                    }
+                    $grouped['older'][$dateKey]['transactions'][] = $formattedTransaction;
+                }
+            } else {
+                $dateKey = $transactionDate->format('Y-m-d');
+                if (!isset($grouped['older'][$dateKey])) {
+                    $grouped['older'][$dateKey] = [
+                        'date' => $transactionDate->format('d/m/Y'),
+                        'transactions' => []
+                    ];
+                }
+                $grouped['older'][$dateKey]['transactions'][] = $formattedTransaction;
+            }
+        }
+
+        return [
+            'currentMonth' => Carbon::create($year, $month, 1)->locale('pt_BR')->isoFormat('MMMM YYYY'),
+            'currentMonthValue' => $month,
+            'currentYearValue' => $year,
+            'totalBalance' => $totalBalance,
+            'totalIncome' => $monthlyIncome,
+            'totalExpenses' => $monthlyExpenses,
+            'todayTransactions' => $grouped['today'],
+            'yesterdayTransactions' => $grouped['yesterday'],
+            'olderTransactions' => array_values($grouped['older']),
+            'categories' => $categories
+        ];
+    }
+
+    public function prepareDataForCreate()
+    {
+        return [
+            'categories' => Category::orderBy('title', 'asc')->get()
+        ];
+    }
+
+    private function getCategoryIcon(string $category): string
+    {
+        $icons = [
+            'alimentação' => 'shopping',
+            'supermercado' => 'shopping',
+            'salário' => 'salary',
+            'combustível' => 'fuel',
+            'transporte' => 'fuel',
+        ];
+
+        return $icons[strtolower($category)] ?? 'shopping';
+    }
+
+    public function create($data)
+    {
+        $data['reference_date'] = isset($data['reference_date']) && !empty($data['reference_date'])
+            ? $data['reference_date']
+            : now()->format('Y-m-d H:i:s');
+
+        $transaction = Transaction::create($data);
+
+        $transaction->load(['user', 'category']);
+
+        return $transaction;
+    }
+
+    public function createByIa($data)
+    {
+        DB::beginTransaction();
+
+        try {
+            $result = $this->convertDataToResult($data);
+
+            $user = User::where('telegram_id', $data['telegram_id'])->first();
+
+            if (!$user) {
+                throw new Exception("Usuário não encontrado");
+            }
+
+            $category_id = $this->defineCategoryId($result);
+
+            if (!$category_id) {
+                throw new Exception("Nenhuma categoria disponível no sistema");
+            }
+
+            $datetime = isset($result['reference_date']) && !empty($result['reference_date'])
+                ? $result['reference_date']
+                : now()->format('Y-m-d H:i:s');
+
+            $transaction = $this->create([
+                'user_id'          => $user->id,
+                'category_id'      => $category_id,
+                'type'             => $result['type'],
+                'amount'           => $result['amount'],
+                'description'      => $result['description'],
+                'original_message' => $data['original_message'],
+                'reference_date'   => $datetime
+            ]);
+
+            $totalIncome = Transaction::where('user_id', $user->id)->where('type', 'receita')->sum('amount');
+            $totalExpenses = Transaction::where('user_id', $user->id)->where('type', 'despesa')->sum('amount');
+
+            $transaction->balance = (float) $totalIncome - (float) $totalExpenses;
+
+            DB::commit();
+
+            return $transaction;
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw new Exception($e->getMessage());
+        }
+    }
+
+    public function generateByIa(array $data)
+    {
+        $data = [
+            'original_message' => $data['description'],
+            'telegram_id' => auth()->user()->telegram_id
+        ];
+
+        return $this->createByIa($data);
+    }
+
+    public function update(int $id, array $data)
+    {
+        $transaction = Transaction::findOrFail($id);
+        $transaction->update($data);
+    }
+
+    public function delete(int $id)
+    {
+        $transaction = Transaction::findOrFail($id);
+        $transaction->delete();
+    }
+
+    private function convertDataToResult(array $data)
+    {
+        $categories = Category::orderBy('title', 'asc')->pluck('title')->toArray();
+        $result = $this->openAiLibrary->naturalLanguageToJsonConverter($data['original_message'], $categories);
+
+        if (isset($result['error'])) {
+            throw new Exception($result['error']);
+        }
+
+        $required_fields = ['type', 'amount', 'description'];
+
+        foreach ($required_fields as $field) {
+            if (!isset($result[$field]) || $result[$field] === '' || $result[$field] === null) {
+                throw new Exception("Não consegui entender sua mensagem.\n\nTente descrever o valor e o tipo da transação, por exemplo:\n- Gastei 50 reais no mercado\n- Recebi 1000 reais de salário\n- Tenho 500 reais na conta\n\nOu envie um arquivo com o extrato.");
+            }
+        }
+
+        if (!is_numeric($result['amount']) || $result['amount'] <= 0) {
+            throw new Exception("Valor monetário inválido ou não encontrado na mensagem");
+        }
+
+        if ($result['type'] === 'saldo') {
+            $result['type'] = 'receita';
+        }
+
+        return $result;
+    }
+
+    private function defineCategoryId(array $result): int
+    {
+        $find_category = trim($result['category'] ?? '');
+
+        if (!empty($find_category)) {
+            $category = Category::where('title', $find_category)->first();
+            if ($category) {
+                return $category->id;
+            }
+        }
+
+        $fallback = Category::where('title', 'Outros')->firstOrFail();
+
+        return $fallback->id;
+    }
+}
