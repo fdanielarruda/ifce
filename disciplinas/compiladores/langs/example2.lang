@@ -1,0 +1,27 @@
+// Declaração de variáveis
+var inteiro: ledPin, botaoPin;
+var booleano: estadoBotao;
+
+// Função de setup
+config
+    // Atribuição de valores às variáveis
+    ledPin = 2; // Pino GPIO onde o LED está conectado
+    botaoPin = 4; // Pino GPIO onde o botão está conectado
+
+    // Configuração de pinos
+    configurar ledPin como saida;
+    configurar botaoPin como entrada;
+fim
+
+// Loop principal
+repita
+    estadoBotao = lerDigital botaoPin;
+    
+    se estadoBotao == 1 entao
+        ligar ledPin; // Aciona o LED
+    senao
+        desligar ledPin; // Desliga o LED
+    fim
+
+    esperar 1000; // Aguarda um curto período para evitar leitura contínua
+fim
