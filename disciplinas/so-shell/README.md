@@ -1,22 +1,15 @@
-# TRABALHO AVALIATIVO - MY SHELL
+# Sistemas Operacionais — MyShell
 
-Cadeira: Sistemas Operacionais
+Interpretador de comandos próprio em C: lê comandos do teclado e os executa em processos filhos (`fork`/`exec`). Use `exit` para sair.
 
-Dupla: Walyson Silva (20201045050546) e Daniel Arruda (20201045050279)
+Dupla: Walyson Silva e Daniel Arruda — Prof. Daniel Silva Ferreira.
 
-Professor: Daniel Silva Ferreira
+Vídeo explicativo: https://youtu.be/CmVlcrCfatk
 
-Compilar o shell: 
-
-```bash
-  gcc myshell.c -o nome_do_executavel.e
-```
-
-Executar o shell: 
+## Como executar
 
 ```bash
-  ./nome_do_executavel.e
+cd disciplinas/so-shell
+gcc myshell.c -o myshell
+./myshell
 ```
-
-Link do vídeo explicativo:
-https://youtu.be/CmVlcrCfatk
